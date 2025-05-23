@@ -1,0 +1,118 @@
+import hashlib
+import json
+from datetime import datetime
+
+# Simulação de banco de dados em memória
+db = {}
+
+# Log de atividades
+log_atividades = []
+
+# Função para anonimizar dados (simplesmente usando hash)
+def anonimizar(dado):
+    return hashlib.sha256(dado.encode()).hexdigest()
+
+# Registrar log
+def registrar_log(acao, usuario):
+    log = {
+        "usuario": usuario,
+        "acao": acao,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+    log_atividades.append(log)
+    print(f"[LOG] {log}")
+
+# Consentimento
+def obter_consentimento():
+    resposta = input("Você autoriza o uso dos seus dados pessoais? (sim/não): ").lower()
+    return resposta == "sim"
+
+# Cadastro de dados pessoais
+def cadastrar_usuario():
+    if not obter_consentimento():
+        print("Consentimento não concedido. Cadastro cancelado.")
+        return
+
+    nome = input("Digite seu nome: ")
+    email = input("Digite seu email: ")
+    senha = input("Digite sua senha: ")
+    nível = input("Qual seu nível de conhecimento em tecnologia? (básico/intermediario/avançado): ") .lower()
+    cpf = input("Digite seu CPF: ")
+
+    usuario_id = hashlib.md5(email.encode()).hexdigest()
+
+    db[usuario_id] = {
+        "nome": nome,
+        "email": email,
+        "cpf": anonimizar(cpf),  # CPF anonimizado
+        "senha": anonimizar(senha), #SENHA anonimizada
+        "nivel": nivel,
+        "criado_em": datetime.utcnow().isoformat()
+    }
+
+    registrar_log("cadastro", usuario_id)
+    print("Usuário cadastrado com sucesso!")
+
+# Visualizar dados
+def visualizar_dados():
+    email = input("Digite seu email para acessar os dados: ")
+    usuario_id = autenticar_usuario(email)
+
+    if usuario_id in db:
+        print(json.dumps(db[usuario_id], indent=4))
+        registrar_log("visualizacao", usuario_id)
+    else:
+        print("Usuário não encontrado.")
+
+# Atualizar dados
+def atualizar_dados():
+    email = input("Digite seu email para atualizar os dados: ")
+    usuario_id = hashlib.md5(email.encode()).hexdigest()
+
+    if usuario_id in db:
+        novo_nome = input("Digite o novo nome: ")
+        db[usuario_id]["nome"] = novo_nome
+        registrar_log("atualizacao", usuario_id)
+        print("Dados atualizados.")
+    else:
+        print("Usuário não encontrado.")
+
+# Excluir dados
+def excluir_dados():
+    email = input("Digite seu email para excluir os dados: ")
+    usuario_id = hashlib.md5(email.encode()).hexdigest()
+
+    if usuario_id in db:
+        del db[usuario_id]
+        registrar_log("exclusao", usuario_id)
+        print("Dados excluídos.")
+    else:
+        print("Usuário não encontrado.")
+
+# Menu principal
+def menu():
+    while True:
+        print("\n--- Sistema de Proteção de Dados (LGPD) ---")
+        print("1. Cadastrar usuário")
+        print("2. Visualizar dados")
+        print("3. Atualizar dados")
+        print("4. Excluir dados")
+        print("5. Sair")
+        opcao = input("Escolha uma opção: ")
+
+        if opcao == "1":
+            cadastrar_usuario()
+        elif opcao == "2":
+            visualizar_dados()
+        elif opcao == "3":
+            atualizar_dados()
+        elif opcao == "4":
+            excluir_dados()
+        elif opcao == "5":
+            break
+        else:
+            print("Opção inválida!")
+
+# Ponto de entrada do programa
+if "name" == "main":
+    menu()
